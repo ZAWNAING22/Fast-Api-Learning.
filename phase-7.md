@@ -601,3 +601,280 @@ predictions.csv download
 ```
 
 That is almost exactly how many real-world batch prediction APIs are built.
+Yes. Add this section right after your **File Upload API** notes.
+
+---
+
+# python-multipart Library
+
+## What is it?
+
+FastAPI uses **python-multipart** to process uploaded files and form data sent using:
+
+```http
+Content-Type: multipart/form-data
+```
+
+When a client uploads:
+
+```text
+houses.csv
+```
+
+or submits a form with:
+
+```text
+username
+password
+profile_picture
+```
+
+the data arrives as **multipart/form-data**.
+
+FastAPI itself does not parse this format.
+
+It relies on:
+
+```bash
+pip install python-multipart
+```
+
+---
+
+# Why is it needed?
+
+Without:
+
+```bash
+pip install python-multipart
+```
+
+this code:
+
+```python
+from fastapi import UploadFile, File
+
+@app.post("/upload")
+async def upload_file(
+    file: UploadFile = File(...)
+):
+    pass
+```
+
+will raise an error:
+
+```text
+RuntimeError:
+Form data requires "python-multipart"
+to be installed.
+```
+
+Because FastAPI needs a parser to separate:
+
+```text
+CSV file
+Image file
+PDF file
+Form fields
+```
+
+from the incoming request.
+
+---
+
+# What is Multipart/Form-Data?
+
+Normal JSON request:
+
+```json
+{
+  "name": "John",
+  "age": 25
+}
+```
+
+works well for text.
+
+But files are binary data.
+
+For uploads, browser sends:
+
+```http
+multipart/form-data
+```
+
+Structure:
+
+```text
+Part 1 → username
+Part 2 → email
+Part 3 → houses.csv
+```
+
+python-multipart parses these parts.
+
+---
+
+# Real-World Example
+
+User uploads:
+
+```text
+houses.csv
+```
+
+Browser:
+
+```text
+multipart/form-data
+        ↓
+FastAPI
+        ↓
+python-multipart
+        ↓
+UploadFile object
+```
+
+Then your code receives:
+
+```python
+file: UploadFile
+```
+
+ready to use.
+
+---
+
+# Where It Is Used
+
+### AI/ML APIs
+
+Upload:
+
+```text
+dataset.csv
+```
+
+Predict:
+
+```text
+predictions.csv
+```
+
+---
+
+### Profile Picture Upload
+
+Upload:
+
+```text
+photo.jpg
+```
+
+Save to storage.
+
+---
+
+### Resume Screening System
+
+Upload:
+
+```text
+resume.pdf
+```
+
+Extract information.
+
+---
+
+### Cybersecurity Dashboard
+
+Upload:
+
+```text
+network_logs.csv
+```
+
+Run intrusion detection model.
+
+---
+
+# Relation with UploadFile
+
+```python
+from fastapi import UploadFile, File
+```
+
+works because:
+
+```text
+Upload Request
+      ↓
+python-multipart parses request
+      ↓
+FastAPI creates UploadFile
+      ↓
+Your endpoint receives file
+```
+
+Without python-multipart:
+
+```python
+UploadFile
+File(...)
+```
+
+cannot function.
+
+---
+
+# Interview Note
+
+**python-multipart** is a dependency used by FastAPI to parse incoming `multipart/form-data` requests, enabling file uploads and HTML form submissions. It is required whenever using:
+
+```python
+UploadFile
+File(...)
+Form(...)
+```
+
+Mental model:
+
+```text
+Browser Upload
+      ↓
+multipart/form-data
+      ↓
+python-multipart
+      ↓
+FastAPI
+      ↓
+UploadFile / Form Data
+      ↓
+Your Application Logic
+```
+
+For your **California Housing Batch Prediction API**, the full flow becomes:
+
+```text
+Client Upload houses.csv
+            ↓
+multipart/form-data
+            ↓
+python-multipart
+            ↓
+UploadFile
+            ↓
+io.StringIO
+            ↓
+pandas.read_csv()
+            ↓
+model.predict()
+            ↓
+StreamingResponse
+            ↓
+predictions.csv
+```
+
+This is the complete upload-processing-download pipeline commonly used in production ML APIs.
+
